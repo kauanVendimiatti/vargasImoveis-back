@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vargas - Administração de Imóveis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .sidebar-icon { width: 24px; height: 24px; display: inline-block; text-align: center; font-size: 20px; line-height: 24px; }
+        .active-nav { background-color: #f97316; color: white; }
+        .nav-item:hover { background-color: #fb923c; color: white; }
+        .modal-backdrop { background-color: rgba(0,0,0,0.75); }
+        .modal-content { max-height: 90vh; } /* A altura máxima do modal inteiro */
+        input[type='number']::-webkit-outer-spin-button,
+        input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type='number'] { -moz-appearance: textfield; appearance: none; }
+        #modal-body::-webkit-scrollbar { width: 8px; }
+        #modal-body::-webkit-scrollbar-track { background: #2d3748; }
+        #modal-body::-webkit-scrollbar-thumb { background-color: #4a5568; border-radius: 4px; }
+        #modal-body::-webkit-scrollbar-thumb:hover { background-color: #718096; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-300">
+
+    <div class="flex h-screen bg-gray-900">
+        <aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen bg-gray-800 text-white flex-col transition-transform -translate-x-full md:translate-x-0">
+            <div class="flex items-center justify-center h-20 border-b border-gray-700">
+                 <h1 class="text-2xl font-bold text-white">VARGAS</h1>
+            </div>
+            <nav class="flex-1 px-4 py-8 space-y-2">
+                <a href="#" class="nav-item flex items-center px-4 py-2.5 rounded-lg transition duration-200" data-page="dashboard">
+                    <span class="sidebar-icon">📊</span><span class="ml-4">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-2.5 rounded-lg transition duration-200" data-page="imoveis">
+                     <span class="sidebar-icon">🏠</span><span class="ml-4">Imóveis</span>
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-2.5 rounded-lg transition duration-200" data-page="contratos">
+                    <span class="sidebar-icon">📄</span><span class="ml-4">Contratos</span>
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-2.5 rounded-lg transition duration-200" data-page="locadores">
+                    <span class="sidebar-icon">👨‍💼</span><span class="ml-4">Locadores</span>
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-2.5 rounded-lg transition duration-200" data-page="locatarios">
+                    <span class="sidebar-icon">🧑‍🤝‍🧑</span><span class="ml-4">Locatários</span>
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-2.5 rounded-lg transition duration-200" data-page="pagamentos">
+                    <span class="sidebar-icon">💰</span><span class="ml-4">Pagamentos</span>
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-2.5 rounded-lg transition duration-200" data-page="manutencao">
+                    <span class="sidebar-icon">🛠️</span><span class="ml-4">Manutenção</span>
+                </a>
+                <a href="#" class="nav-item flex items-center px-4 py-2.5 rounded-lg transition duration-200" data-page="documentos">
+                    <span class="sidebar-icon">📎</span><span class="ml-4">Documentos</span>
+                </a>
+            </nav>
+        </aside>
+
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-75 z-30 hidden md:hidden"></div>
+
+        <div id="main-content" class="flex-1 flex flex-col transition-all duration-300 ease-in-out md:ml-64">
+            <header class="flex items-center justify-between h-20 px-6 bg-gray-900 border-b border-gray-700">
+                 <div class="flex items-center">
+                    <button id="menu-button" class="text-gray-400 focus:outline-none md:hidden">
+                        <span class="sidebar-icon text-2xl">☰</span>
+                    </button>
+                    <h2 id="page-title" class="text-2xl font-semibold text-white ml-2">Dashboard</h2>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-white font-semibold text-lg hidden sm:block">Vargas Imóveis</span>
+                </div>
+            </header>
+            
+            <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+                <div id="page-dashboard" class="page-content"></div>
+                <div id="page-imoveis" class="page-content hidden"></div>
+                <div id="page-contratos" class="page-content hidden"></div>
+                <div id="page-locadores" class="page-content hidden"></div>
+                <div id="page-locatarios" class="page-content hidden"></div>
+                <div id="page-pagamentos" class="page-content hidden"></div>
+                <div id="page-manutencao" class="page-content hidden"></div>
+                <div id="page-documentos" class="page-content hidden"></div>
+            </main>
+        </div>
+    </div>
+
+    <div id="modal" class="fixed inset-0 z-50 items-center justify-center flex hidden modal-backdrop">
+        <div class="bg-gray-800 rounded-xl shadow-lg w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 modal-content flex flex-col">
+            <div class="flex-shrink-0 flex justify-between items-center p-6 border-b border-gray-700">
+                <h3 id="modal-title" class="text-2xl font-bold text-white"></h3>
+                <button id="modal-close-btn" class="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div id="modal-body" class="p-8 flex-grow overflow-y-auto"></div>
+            <div id="modal-footer" class="flex-shrink-0 p-6 border-t border-gray-700 text-right"></div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ui = {
+        pages: document.querySelectorAll('.page-content'),
+        navLinks: document.querySelectorAll('.nav-item'),
+        menuButton: document.getElementById('menu-button'),
+        sidebar: document.getElementById('sidebar'),
+        overlay: document.getElementById('sidebar-overlay'),
+        pageTitle: document.getElementById('page-title'),
+        mainContent: document.getElementById('main-content'),
+        modal: document.getElementById('modal'),
+        modalTitle: document.getElementById('modal-title'),
+        modalBody: document.getElementById('modal-body'),
+        modalFooter: document.getElementById('modal-footer'), // Novo elemento de UI
+        modalCloseBtn: document.getElementById('modal-close-btn'),
+    };
+    
+    let state = { currentPage: 'dashboard' };
+
+    const pageConfigs = {
+        imoveis: {
+            title: 'Imóveis',
+            endpoint: '/api/imoveis/',
+            columns: [
+                { header: 'ID', key: 'id' }, { header: 'Endereço', key: 'endereco' },
+                { header: 'Tipo', key: 'tipo_imovel' }, { header: 'Status', key: 'status_imovel', type: 'badge' },
+                { header: 'Aluguel', key: 'valor_aluguel', type: 'currency' },
+            ],
+            formFields: [
+                // Grupo: Dados Principais
+                { key: 'tipo_imovel', label: 'Tipo de Imóvel', type: 'select', required: true, options: [['Casa', 'Casa'], ['Apartamento', 'Apartamento'], ['Sala Comercial', 'Sala Comercial'], ['Terreno', 'Terreno'], ['Galpão', 'Galpão']]},
+                { key: 'status_imovel', label: 'Status', type: 'select', required: true, options: [['Disponível', 'Disponível'], ['Alugado', 'Alugado'], ['Vendido', 'Vendido'], ['Em Manutenção', 'Em Manutenção'], ['Inativo', 'Inativo']]},
+                { key: 'endereco', label: 'Endereço Completo', type: 'text', required: true },
+                { key: 'descricao', label: 'Descrição', type: 'textarea' },
+                
+                // Grupo: Características Físicas
+                { key: 'area_util', label: 'Área Útil (m²)', type: 'number', required: true },
+                { key: 'area_total', label: 'Área Total (m²)', type: 'number' },
+                { key: 'andar', label: 'Andar', type: 'number' },
+                { key: 'numero_quartos', label: 'Quartos', type: 'number' },
+                { key: 'numero_banheiros', label: 'Banheiros', type: 'number' },
+                { key: 'vagas_garagem', label: 'Vagas de Garagem', type: 'number' },
+
+                // Grupo: Códigos e Condomínio
+                { key: 'codigo_energia', label: 'Código de Energia', type: 'text' },
+                { key: 'codigo_agua', label: 'Código de Água', type: 'text' },
+                { key: 'administradora_condominio', label: 'Administradora do Condomínio', type: 'text' },
+                { key: 'condominio_valor', label: 'Valor do Condomínio', type: 'number', step: '0.01' },
+                
+                // Grupo: Dados de Aquisição e Venda
+                { key: 'data_aquisicao', label: 'Data de Aquisição', type: 'date' },
+                { key: 'valor_aquisicao', label: 'Valor de Aquisição', type: 'number', step: '0.01' },
+                { key: 'data_venda', label: 'Data da Venda', type: 'date' },
+                { key: 'imposto_venda', label: 'Imposto sobre Venda', type: 'number', step: '0.01' },
+                { key: 'valor_liquido_venda', label: 'Valor Líquido da Venda', type: 'number', step: '0.01' },
+                
+                // Grupo: Dados de Locação
+                { key: 'valor_aluguel', label: 'Valor do Aluguel', type: 'number', step: '0.01', required: true },
+                { key: 'valor_liquido_aluguel', label: 'Valor Líquido do Aluguel', type: 'number', step: '0.01' },
+                { key: 'iptu_valor', label: 'Valor do IPTU', type: 'number', step: '0.01' },
+
+                // Grupo: Seguro do Imóvel
+                { key: 'seguro_vencimento', label: 'Vencimento do Seguro', type: 'date' },
+                { key: 'seguro_corretora', label: 'Corretora do Seguro', type: 'text' },
+                { key: 'seguro_seguradora', label: 'Seguradora', type: 'text' },
+                { key: 'seguro_valor', label: 'Valor do Seguro', type: 'number', step: '0.01' },
+
+                { key: 'imagens', label: 'URL da Imagem', type: 'text' }
+            ]
+        },
+        locadores: {
+            title: 'Locadores',
+            endpoint: '/api/locadores/',
+            columns: [
+                { header: 'ID', key: 'id' }, { header: 'Nome', key: 'nome' },
+                { header: 'Email', key: 'email' }, { header: 'Telefone', key: 'telefone' },
+                { header: 'Status', key: 'status_locador', type: 'badge' },
+            ],
+            formFields: [
+                { key: 'nome', label: 'Nome Completo', type: 'text', required: true },
+                { key: 'email', label: 'E-mail', type: 'email', required: true },
+                { key: 'telefone', label: 'Telefone', type: 'text', required: true },
+                { key: 'tipo_documento', label: 'Tipo Documento', type: 'select', required: true, options: [['CPF', 'CPF'], ['CNPJ', 'CNPJ']] },
+                { key: 'cpf_cnpj', label: 'CPF/CNPJ', type: 'text', required: true },
+                { key: 'endereco', label: 'Endereço', type: 'text' },
+                { key: 'dados_bancarios', label: 'Dados Bancários', type: 'textarea' },
+                { key: 'status_locador', label: 'Status', type: 'select', required: true, options: [['Ativo', 'Ativo'], ['Inativo', 'Inativo']] }
+            ]
+        },
+        locatarios: {
+            title: 'Locatários',
+            endpoint: '/api/locatarios/',
+            columns: [
+                { header: 'ID', key: 'id' }, { header: 'Nome', key: 'nome' },
+                { header: 'Email', key: 'email' }, { header: 'CPF', key: 'cpf'},
+                { header: 'Status', key: 'status_locatario', type: 'badge' }
+            ],
+            formFields: [
+                { key: 'nome', label: 'Nome Completo', type: 'text', required: true },
+                { key: 'email', label: 'E-mail', type: 'email', required: true },
+                { key: 'cpf', label: 'CPF', type: 'text', required: true },
+                { key: 'telefone', label: 'Telefone', type: 'text', required: true },
+                { key: 'endereco', label: 'Endereço', type: 'text' },
+                { key: 'comprovante_renda', label: 'URL Comprovante de Renda', type: 'text' },
+                { key: 'referencias_pessoais', label: 'Referências Pessoais', type: 'textarea' },
+                { key: 'status_locatario', label: 'Status', type: 'select', required: true, options: [['Ativo', 'Ativo'], ['Inativo', 'Inativo']] }
+            ]
+        },
+        contratos: {
+            title: 'Contratos',
+            endpoint: '/api/contratos/',
+            columns: [
+                { header: 'ID', key: 'id' }, { header: 'Imóvel', key: 'imovel' },
+                { header: 'Locatário', key: 'locatario' }, { header: 'Status', key: 'status_contrato', type: 'badge' },
+            ],
+            formFields: [
+                { key: 'imovel_id', label: 'Imóvel', type: 'select', required: true, sourceEndpoint: '/api/imoveis/' },
+                { key: 'locador_id', label: 'Locador (Proprietário)', type: 'select', required: true, sourceEndpoint: '/api/locadores/' },
+                { key: 'locatario_id', label: 'Locatário (Inquilino)', type: 'select', required: true, sourceEndpoint: '/api/locatarios/' },
+                { key: 'data_inicio', label: 'Data de Início', type: 'date', required: true },
+                { key: 'data_fim', label: 'Data de Fim', type: 'date', required: true },
+                { key: 'data_assinatura', label: 'Data da Assinatura', type: 'date', required: true },
+                { key: 'data_vencimento_pagamento', label: 'Dia do Vencimento', type: 'number', required: true },
+                { key: 'valor_aluguel', label: 'Valor do Aluguel', type: 'number', step: '0.01', required: true },
+                { key: 'valor_deposito', label: 'Valor do Depósito (Caução)', type: 'number', step: '0.01' },
+                { key: 'multa_rescisoria', label: 'Multa Rescisória', type: 'number', step: '0.01', required: true },
+                { key: 'status_contrato', label: 'Status do Contrato', type: 'select', required: true, options: [['Ativo', 'Ativo'], ['Encerrado', 'Encerrado'], ['Rescindido', 'Rescindido'], ['Renovado', 'Renovado']]},
+                { key: 'clausulas_especificas', label: 'Cláusulas Específicas', type: 'textarea' },
+            ]
+        },
+        pagamentos: {
+            title: 'Pagamentos',
+            endpoint: '/api/pagamentos/',
+            columns: [
+                { header: 'ID', key: 'id' }, { header: 'Contrato', key: 'contrato' },
+                { header: 'Valor Pago', key: 'valor_pago', type: 'currency' }, { header: 'Status', key: 'status_pagamento', type: 'badge' },
+            ],
+            formFields: [
+                { key: 'contrato_id', label: 'Contrato', type: 'select', required: true, sourceEndpoint: '/api/contratos/' },
+                { key: 'data_pagamento', label: 'Data do Pagamento', type: 'date', required: true },
+                { key: 'valor_pago', label: 'Valor Pago', type: 'number', step: '0.01', required: true },
+                { key: 'multa_juros', label: 'Multa/Juros', type: 'number', step: '0.01' },
+                { key: 'forma_pagamento', label: 'Forma de Pagamento', type: 'select', required: true, options: [['Boleto', 'Boleto'], ['Transferência Bancária', 'Transferência Bancária'], ['Cartão de Crédito', 'Cartão de Crédito'], ['PIX', 'PIX']]},
+                { key: 'status_pagamento', label: 'Status do Pagamento', type: 'select', required: true, options: [['Pago', 'Pago'], ['Pendente', 'Pendente'], ['Em Atraso', 'Em Atraso']]},
+                { key: 'comprovante_pagamento', label: 'URL do Comprovante', type: 'text' },
+            ]
+        },
+        manutencao: {
+            title: 'Manutenções',
+            endpoint: '/api/manutencoes/',
+            columns: [
+                { header: 'ID', key: 'id' }, { header: 'Imóvel', key: 'imovel' },
+                { header: 'Descrição', key: 'descricao' }, { header: 'Status', key: 'status_manutencao', type: 'badge' },
+            ],
+            formFields: [
+                { key: 'imovel_id', label: 'Imóvel', type: 'select', required: true, sourceEndpoint: '/api/imoveis/' },
+                { key: 'data_solicitacao', label: 'Data da Solicitação', type: 'date', required: true },
+                { key: 'descricao', label: 'Descrição do Problema', type: 'textarea', required: true },
+                { key: 'status_manutencao', label: 'Status', type: 'select', required: true, options: [['Pendente', 'Pendente'], ['Em Andamento', 'Em Andamento'], ['Concluído', 'Concluído'], ['Cancelado', 'Cancelado']]},
+                { key: 'data_conclusao', label: 'Data de Conclusão', type: 'date' },
+                { key: 'custo_manutencao', label: 'Custo da Manutenção', type: 'number', step: '0.01' },
+                { key: 'responsavel_manutencao', label: 'Responsável/Empresa', type: 'text' },
+            ]
+        },
+        documentos: {
+            title: 'Documentos',
+            endpoint: '/api/documentos/',
+            columns: [
+                { header: 'ID', key: 'id' }, { header: 'Tipo', key: 'tipo_documento' },
+                { header: 'Descrição', key: 'descricao_documento' },
+            ],
+            formFields: [
+                { key: 'tipo_documento', label: 'Tipo de Documento', type: 'text', required: true },
+                { key: 'descricao_documento', label: 'Descrição', type: 'textarea', required: true },
+                { key: 'data_documento', label: 'Data do Documento', type: 'date', required: true },
+                { key: 'arquivo_documento', label: 'URL/Caminho do Arquivo', type: 'text', required: true },
+                { key: 'imovel_id', label: 'Imóvel Associado (Opcional)', type: 'select', sourceEndpoint: '/api/imoveis/' },
+                { key: 'locador_id', label: 'Locador Associado (Opcional)', type: 'select', sourceEndpoint: '/api/locadores/' },
+                { key: 'locatario_id', label: 'Locatário Associado (Opcional)', type: 'select', sourceEndpoint: '/api/locatarios/' },
+                { key: 'contrato_id', label: 'Contrato Associado (Opcional)', type: 'select', sourceEndpoint: '/api/contratos/' },
+            ]
+        }
+    };
+
+    function showPage(pageId) {
+        state.currentPage = pageId;
+        ui.pages.forEach(page => page.classList.add('hidden'));
+        const activePage = document.getElementById('page-' + pageId);
+        if (activePage) {
+            activePage.classList.remove('hidden');
+            const config = pageConfigs[pageId];
+            if (config) renderPage(pageId, config);
+            else renderDashboard();
+        }
+        updateActiveNav(pageId);
+        if (window.innerWidth < 768) closeSidebar();
+    }
+    
+    function updateActiveNav(pageId) {
+        ui.navLinks.forEach(link => { link.dataset.page === pageId ? link.classList.add('active-nav') : link.classList.remove('active-nav'); });
+        const activeLink = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+        ui.pageTitle.textContent = activeLink ? activeLink.querySelector('span:last-child').textContent : 'Dashboard';
+    }
+    
+    function closeSidebar() {
+        ui.sidebar.classList.add('-translate-x-full');
+        ui.overlay.classList.add('hidden');
+    }
+
+    window.openModal = function(title, bodyContent, footerContent = '') {
+        ui.modalTitle.textContent = title;
+        ui.modalBody.innerHTML = bodyContent;
+        ui.modalFooter.innerHTML = footerContent;
+        ui.modal.classList.remove('hidden');
+        ui.modal.classList.add('flex');
+    }
+    
+    window.closeModal = function() {
+        ui.modal.classList.add('hidden');
+        ui.modal.classList.remove('flex');
+        ui.modalBody.innerHTML = '';
+        ui.modalFooter.innerHTML = '';
+    }
+
+    ui.menuButton.addEventListener('click', (e) => { e.stopPropagation(); ui.sidebar.classList.toggle('-translate-x-full'); ui.overlay.classList.toggle('hidden'); });
+    ui.overlay.addEventListener('click', closeSidebar);
+    ui.modalCloseBtn.addEventListener('click', closeModal);
+
+    const getStatusBadge = (status) => {
+        const baseClasses = 'px-2 py-1 text-xs font-semibold rounded-full bg-opacity-50 whitespace-nowrap';
+        const statusMap = { 'Ativo': 'green', 'Disponível': 'green', 'Pago': 'green', 'Concluído': 'green', 'Alugado': 'red', 'Vendido': 'red', 'Em Manutenção': 'yellow', 'Pendente': 'yellow', 'Em Andamento': 'yellow', 'Em Atraso': 'yellow', 'Inativo': 'gray', 'Finalizado': 'gray', 'Encerrado': 'gray', 'Rescindido': 'gray', 'Cancelado': 'gray' };
+        const color = statusMap[status] || 'gray';
+        return `<span class="${baseClasses} text-${color}-200 bg-${color}-800">${status}</span>`;
+    };
+
+    function formatCell(item, column) {
+        let value = column.key.split('.').reduce((o, i) => o ? o[i] : null, item);
+        if (value === null || value === undefined) return 'N/A';
+        switch(column.type) {
+            case 'badge': return getStatusBadge(value);
+            case 'currency': return `R$ ${parseFloat(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+            default: return value;
+        }
+    }
+
+    async function renderPage(pageId, config) {
+        const pageElement = document.getElementById('page-' + pageId);
+        pageElement.innerHTML = `<div class="text-center text-gray-500 py-10">Carregando...</div>`;
+        try {
+            const response = await fetch(config.endpoint);
+            if (!response.ok) throw new Error(`Erro na API: ${response.statusText}`);
+            const data = await response.json();
+            const tableHeaders = config.columns.map(col => `<th class="p-4">${col.header}</th>`).join('') + '<th class="p-4"></th>';
+            let tableRows = data.length === 0
+                ? `<tr><td colspan="${config.columns.length + 1}" class="p-4 text-center text-gray-500">Nenhum item encontrado.</td></tr>`
+                : data.map(item => `
+                    <tr class="border-b border-gray-700 hover:bg-gray-700">
+                        ${config.columns.map(col => `<td class="p-4 text-gray-400">${formatCell(item, col)}</td>`).join('')}
+                        <td class="p-4 text-right"><button class="text-orange-500 hover:text-orange-400 font-semibold" onclick="showDetails('${pageId}', ${item.id})">Ver Detalhes</button></td>
+                    </tr>`).join('');
+            pageElement.innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                    <h2 class="text-3xl font-bold text-white mb-4 md:mb-0">${config.title}</h2>
+                    <button onclick="showForm('${pageId}')" class="bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition w-full md:w-auto">+ Adicionar Novo</button>
+                </div>
+                <div class="bg-gray-800 rounded-xl shadow-lg overflow-x-auto">
+                    <table class="w-full text-sm text-left"><thead class="bg-gray-900 text-gray-400 uppercase"><tr>${tableHeaders}</tr></thead><tbody>${tableRows}</tbody></table>
+                </div>`;
+        } catch (error) {
+            console.error(`Erro ao renderizar ${pageId}:`, error);
+            pageElement.innerHTML = `<div class="text-center text-red-400 py-10">Erro ao carregar dados. Verifique a conexão com a API.</div>`;
+        }
+    }
+
+    window.showDetails = async (pageId, itemId) => {
+        const config = pageConfigs[pageId];
+        openModal(`Detalhes de ${config.title} #${itemId}`, '<div class="text-center text-gray-500 p-8">Carregando...</div>');
+        try {
+            const response = await fetch(`${config.endpoint}${itemId}/`);
+            if (!response.ok) throw new Error('Item não encontrado.');
+            const item = await response.json();
+            const bodyContent = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-gray-300">
+                    ${Object.entries(item).map(([key, value]) => `<div><p class="text-sm text-gray-500 font-semibold capitalize">${key.replace(/_/g, ' ')}</p><p class="text-lg">${value !== null ? value : 'N/A'}</p></div>`).join('')}
+                </div>`;
+            const footerContent = `
+                <button class="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700" onclick="handleDelete('${pageId}', ${itemId})">Deletar</button>
+                <button class="bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 ml-2" onclick="showForm('${pageId}', ${itemId})">Editar</button>`;
+            openModal(`Detalhes de ${config.title} #${itemId}`, bodyContent, footerContent);
+        } catch (error) {
+            openModal('Erro', `<p class="text-red-400">${error.message}</p>`);
+        }
+    }
+
+    window.showForm = async (pageId, itemId = null) => {
+        const config = pageConfigs[pageId];
+        if (!config.formFields) { alert('Formulário não configurado para esta seção.'); return; }
+        
+        const isEditing = itemId !== null;
+        const title = isEditing ? `Editar ${config.title} #${itemId}` : `Adicionar Novo ${config.title}`;
+        openModal(title, '<div class="text-center text-gray-500 p-8">Carregando opções do formulário...</div>');
+
+        try {
+            let existingData = {};
+            if (isEditing) {
+                const response = await fetch(`${config.endpoint}${itemId}/`);
+                if (!response.ok) throw new Error('Não foi possível carregar os dados para edição.');
+                existingData = await response.json();
+            }
+
+            const fieldsWithOptionsPromises = config.formFields.map(async (field) => {
+                if (field.sourceEndpoint) {
+                    const response = await fetch(field.sourceEndpoint);
+                    const optionsData = await response.json();
+                    const options = optionsData.map(item => {
+                        const displayName = item.endereco || item.nome || `Contrato #${item.id}` || `ID ${item.id}`;
+                        return [item.id, displayName];
+                    });
+                    return { ...field, options: options };
+                }
+                return field;
+            });
+
+            const resolvedFields = await Promise.all(fieldsWithOptionsPromises);
+
+            const formFieldsHtml = resolvedFields.map(field => {
+                const value = existingData[field.key] || existingData[field.key.replace('_id', '')] || '';
+                const requiredAttr = field.required ? 'required' : '';
+                let fieldHtml = `<div class="${(field.type === 'textarea' ? 'md:col-span-2' : '')}"><label class="text-sm text-gray-400">${field.label}</label>`;
+
+                if (field.type === 'select') {
+                    let optionsHtml = field.required ? '<option value="">-- Selecione --</option>' : '<option value="">Nenhum</option>';
+                    optionsHtml += field.options.map(opt => `<option value="${opt[0]}" ${value == opt[0] ? 'selected' : ''}>${opt[1]}</option>`).join('');
+                    fieldHtml += `<select name="${field.key}" class="w-full mt-1 p-2 border border-gray-600 rounded bg-gray-700 text-white" ${requiredAttr}>${optionsHtml}</select>`;
+                } else if (field.type === 'textarea') {
+                    fieldHtml += `<textarea name="${field.key}" class="w-full mt-1 p-2 border border-gray-600 rounded bg-gray-700 text-white" ${requiredAttr}>${value}</textarea>`;
+                } else {
+                    fieldHtml += `<input type="${field.type}" name="${field.key}" value="${value}" step="${field.step || ''}" class="w-full mt-1 p-2 border border-gray-600 rounded bg-gray-700 text-white" ${requiredAttr}>`;
+                }
+                fieldHtml += '</div>';
+                return fieldHtml;
+            }).join('');
+
+            const bodyContent = `<form id="modal-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">${formFieldsHtml}<div id="form-error" class="md:col-span-2 text-red-400 mt-2"></div></form>`;
+            const footerContent = `
+                <button type="button" class="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700" onclick="closeModal()">Cancelar</button>
+                <button type="submit" form="modal-form" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 ml-2">${isEditing ? 'Salvar Alterações' : 'Criar'}</button>`;
+            
+            openModal(title, bodyContent, footerContent);
+            document.getElementById('modal-form').addEventListener('submit', (e) => handleFormSubmit(e, pageId, itemId));
+
+        } catch (error) {
+            openModal('Erro', `<p class="text-red-400">${error.message}</p>`);
+        }
+    }
+    
+    window.handleFormSubmit = async (event, pageId, itemId = null) => {
+        event.preventDefault();
+        const config = pageConfigs[pageId];
+        const form = event.target;
+        const formData = new FormData(form);
+        let data = Object.fromEntries(formData.entries());
+        const formError = document.getElementById('form-error');
+        if (formError) formError.textContent = '';
+        
+        Object.keys(data).forEach(key => {
+            if (data[key] === '' || data[key] === null) {
+                // Para o Django REST Framework, é melhor enviar 'null' do que remover a chave para campos opcionais.
+                data[key] = null;
+            }
+        });
+        
+        const isEditing = itemId !== null;
+        const url = isEditing ? `${config.endpoint}${itemId}/` : config.endpoint;
+        const method = isEditing ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                const errorMessages = Object.entries(errorData).map(([key, value]) => `${key}: ${value}`).join(' | ');
+                throw new Error(errorMessages);
+            }
+            closeModal();
+            renderPage(pageId, config);
+        } catch (error) {
+            if (formError) formError.textContent = `Erro ao salvar: ${error.message}`;
+        }
+    }
+
+    window.handleDelete = async (pageId, itemId) => {
+        const config = pageConfigs[pageId];
+        if (!confirm(`Tem certeza que deseja deletar o item #${itemId} de ${config.title}? Esta ação não pode ser desfeita.`)) return;
+        try {
+            const response = await fetch(`${config.endpoint}${itemId}/`, { method: 'DELETE' });
+            if (!response.ok) { const errorData = await response.json(); throw new Error(JSON.stringify(errorData)); }
+            closeModal();
+            renderPage(pageId, config);
+        } catch (error) { alert(`Não foi possível deletar o item. Erro: ${error.message}`); }
+    }
+    
+    function renderDashboard() {
+        const page = document.getElementById('page-dashboard');
+        page.innerHTML = `
+            <h2 class="text-3xl font-bold text-white mb-6">Dashboard</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg"><h3 class="font-bold text-xl text-white mb-2">Total de Imóveis</h3><p class="text-4xl font-extrabold text-orange-500">...</p></div>
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg"><h3 class="font-bold text-xl text-white mb-2">Contratos Ativos</h3><p class="text-4xl font-extrabold text-orange-500">...</p></div>
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg"><h3 class="font-bold text-xl text-white mb-2">Pagamentos Pendentes</h3><p class="text-4xl font-extrabold text-orange-500">...</p></div>
+            </div>`;
+        fetch('/api/imoveis/').then(r => r.json()).then(d => { page.querySelector('p.text-4xl').textContent = d.length; }).catch(e => page.querySelector('p.text-4xl').textContent = 'N/A');
+        fetch('/api/contratos/?status_contrato=Ativo').then(r => r.json()).then(d => { page.querySelectorAll('p.text-4xl')[1].textContent = d.length; }).catch(e => page.querySelectorAll('p.text-4xl')[1].textContent = 'N/A');
+        fetch('/api/pagamentos/?status_pagamento=Pendente').then(r => r.json()).then(d => { page.querySelectorAll('p.text-4xl')[2].textContent = d.length; }).catch(e => page.querySelectorAll('p.text-4xl')[2].textContent = 'N/A');
+    }
+
+    function initialize() {
+        ui.navLinks.forEach(link => {
+            link.addEventListener('click', (e) => { e.preventDefault(); showPage(link.dataset.page); });
+        });
+        showPage('dashboard');
+        if (window.innerWidth >= 768) {
+             ui.sidebar.classList.remove('-translate-x-full');
+             ui.mainContent.classList.add('md:ml-64');
+        }
+    }
+
+    initialize();
+});
+</script>
+
+</body>
+</html>
