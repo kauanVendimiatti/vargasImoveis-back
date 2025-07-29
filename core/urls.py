@@ -4,6 +4,8 @@ from .views import (
     ImovelViewSet,
     LocadorViewSet,
     LocatarioViewSet,
+    FiadorViewSet,
+    IntermediarioViewSet,
     ContratoViewSet,
     PagamentoViewSet,
     ManutencaoViewSet,
@@ -19,6 +21,8 @@ router.register(r'contratos', ContratoViewSet)
 router.register(r'pagamentos', PagamentoViewSet)
 router.register(r'manutencoes', ManutencaoViewSet)
 router.register(r'documentos', DocumentoViewSet)
+router.register(r'fiadores', FiadorViewSet)
+router.register(r'intermediarios', IntermediarioViewSet)
 
 # As URLs da API são determinadas automaticamente pelo router.
 urlpatterns = [

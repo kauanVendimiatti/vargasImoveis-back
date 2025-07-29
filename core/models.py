@@ -15,6 +15,7 @@ class Imovel(models.Model):
         ('Casa', 'Casa'),
         ('Apartamento', 'Apartamento'),
         ('Sala Comercial', 'Sala Comercial'),
+        ('Prédio Comercial', 'Prédio Comercial'),
         ('Terreno', 'Terreno'),
         ('Galpão', 'Galpão'),
     ]
@@ -66,6 +67,15 @@ class Imovel(models.Model):
     seguro_seguradora = models.CharField(max_length=255, blank=True, null=True, verbose_name="Seguradora")
     seguro_valor = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Valor do Seguro")
 
+    # --- NOVOS CAMPOS: CERTIFICADOS COMERCIAIS ---
+    avcb_codigo = models.CharField(max_length=100, blank=True, null=True, verbose_name="Código AVCB")
+    avcb_emissao = models.DateField(blank=True, null=True, verbose_name="Emissão AVCB")
+    avcb_vencimento = models.DateField(blank=True, null=True, verbose_name="Vencimento AVCB")
+    vencimento_extintores = models.DateField(blank=True, null=True, verbose_name="Vencimento dos Extintores")
+    vencimento_dedetizacao = models.DateField(blank=True, null=True, verbose_name="Vencimento da Dedetização")
+    vencimento_caixa_dagua = models.DateField(blank=True, null=True, verbose_name="Vencimento Certificado Caixa d'Água")
+
+
     # Campo de Imagens (placeholder)
     imagens = models.CharField(max_length=255, blank=True, null=True, help_text="Caminho ou URL para as imagens")
 
@@ -86,17 +96,18 @@ class Locador(models.Model):
     Representa o proprietário de um ou mais imóveis.
     """
     TIPO_DOCUMENTO_CHOICES = [('CPF', 'CPF'), ('CNPJ', 'CNPJ')]
-    STATUS_CHOICES = [('Ativo', 'Ativo'), ('Inativo', 'Inativo')]
+    TIPO_PESSOA_CHOICES = [('Física', 'Física'), ('Jurídica', 'Jurídica')]
 
     nome = models.CharField(max_length=255, verbose_name="Nome Completo")
-    tipo_documento = models.CharField(max_length=4, choices=TIPO_DOCUMENTO_CHOICES, default='CPF')
+    email = models.EmailField(max_length=255, unique=True, verbose_name="E-mail")
+    telefone = models.CharField(max_length=20, verbose_name="Telefone")
+    profissao = models.CharField(max_length=100, verbose_name="Profissão", null=True, blank=True)
+    tipo_pessoa = models.CharField(max_length=10, choices=TIPO_PESSOA_CHOICES, default='Física')
+    tipo_documento = models.CharField(max_length=10, choices=TIPO_DOCUMENTO_CHOICES, default='CPF')
     cpf_cnpj = models.CharField(max_length=18, unique=True, verbose_name="CPF/CNPJ")
     endereco = models.CharField(max_length=255, verbose_name="Endereço")
-    telefone = models.CharField(max_length=20, verbose_name="Telefone")
-    email = models.EmailField(max_length=255, unique=True, verbose_name="E-mail")
     dados_bancarios = models.TextField(blank=True, null=True, verbose_name="Dados Bancários")
     data_cadastro = models.DateTimeField(auto_now_add=True, verbose_name="Data de Cadastro")
-    status_locador = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo', verbose_name="Status")
 
     class Meta:
         verbose_name = "Locador"
@@ -113,20 +124,20 @@ class Locatario(models.Model):
     """
     Representa o inquilino de um imóvel.
     """
-    STATUS_CHOICES = [('Ativo', 'Ativo'), ('Inativo', 'Inativo')]
+    TIPO_DOCUMENTO_CHOICES = [('CPF', 'CPF'), ('CNPJ', 'CNPJ')]
+    TIPO_PESSOA_CHOICES = [('Física', 'Física'), ('Jurídica', 'Jurídica')]
 
     nome = models.CharField(max_length=255, verbose_name="Nome Completo")
-    cpf = models.CharField(max_length=14, unique=True, verbose_name="CPF")
-    endereco = models.CharField(max_length=255, verbose_name="Endereço")
-    telefone = models.CharField(max_length=20, verbose_name="Telefone")
     email = models.EmailField(max_length=255, unique=True, verbose_name="E-mail")
-    status_locatario = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Ativo', verbose_name="Status")
+    telefone = models.CharField(max_length=20, verbose_name="Telefone")
+    profissao = models.CharField(max_length=100, verbose_name="Profissão", null=True, blank=True)
+    tipo_pessoa = models.CharField(max_length=10, choices=TIPO_PESSOA_CHOICES, default='Física')
+    tipo_documento = models.CharField(max_length=10, choices=TIPO_DOCUMENTO_CHOICES, default='CPF')
+    cpf_cnpj = models.CharField(max_length=18, unique=True, verbose_name="CPF/CNPJ")
+    endereco = models.CharField(max_length=255, verbose_name="Endereço")
+    dados_bancarios = models.TextField(blank=True, null=True, verbose_name="Dados Bancários")
     data_cadastro = models.DateTimeField(auto_now_add=True, verbose_name="Data de Cadastro")
     
-    # Campos adicionais de documentação
-    comprovante_renda = models.CharField(max_length=255, blank=True, null=True, help_text="Caminho ou URL para o comprovante")
-    referencias_pessoais = models.TextField(blank=True, null=True, verbose_name="Referências Pessoais/Comerciais")
-
     class Meta:
         verbose_name = "Locatário"
         verbose_name_plural = "Locatários"
@@ -269,3 +280,61 @@ class Documento(models.Model):
 
     def __str__(self):
         return self.tipo_documento
+
+
+# -----------------------------------------------------------------------------
+# 8. MODELO DE FIADORES
+# -----------------------------------------------------------------------------
+class Fiador(models.Model):
+    """
+    Representa um fiador em um contrato de locação.
+    """
+    TIPO_DOCUMENTO_CHOICES = [('CPF', 'CPF'), ('CNPJ', 'CNPJ')]
+    TIPO_PESSOA_CHOICES = [('Física', 'Física'), ('Jurídica', 'Jurídica')]
+
+    nome = models.CharField(max_length=255, verbose_name="Nome Completo")
+    email = models.EmailField(max_length=255, unique=True, verbose_name="E-mail")
+    telefone = models.CharField(max_length=20, verbose_name="Telefone")
+    profissao = models.CharField(max_length=100, verbose_name="Profissão", null=True, blank=True)
+    tipo_pessoa = models.CharField(max_length=10, choices=TIPO_PESSOA_CHOICES, default='Física')
+    tipo_documento = models.CharField(max_length=10, choices=TIPO_DOCUMENTO_CHOICES, default='CPF')
+    cpf_cnpj = models.CharField(max_length=18, unique=True, verbose_name="CPF/CNPJ")
+    endereco = models.CharField(max_length=255, verbose_name="Endereço")
+    dados_bancarios = models.TextField(blank=True, null=True, verbose_name="Dados Bancários")
+    data_cadastro = models.DateTimeField(auto_now_add=True, verbose_name="Data de Cadastro")
+
+    class Meta:
+        verbose_name = "Fiador"
+        verbose_name_plural = "Fiadores"
+
+    def __str__(self):
+        return self.nome
+
+
+# -----------------------------------------------------------------------------
+# 9. MODELO DE INTERMEDIÁRIOS
+# -----------------------------------------------------------------------------
+class Intermediario(models.Model):
+    """
+    Representa um intermediário/corretor em uma negociação.
+    """
+    TIPO_DOCUMENTO_CHOICES = [('CPF', 'CPF'), ('CNPJ', 'CNPJ')]
+    TIPO_PESSOA_CHOICES = [('Física', 'Física'), ('Jurídica', 'Jurídica')]
+
+    nome = models.CharField(max_length=255, verbose_name="Nome Completo")
+    email = models.EmailField(max_length=255, unique=True, verbose_name="E-mail")
+    telefone = models.CharField(max_length=20, verbose_name="Telefone")
+    profissao = models.CharField(max_length=100, verbose_name="Profissão", null=True, blank=True)
+    tipo_pessoa = models.CharField(max_length=10, choices=TIPO_PESSOA_CHOICES, default='Física')
+    tipo_documento = models.CharField(max_length=10, choices=TIPO_DOCUMENTO_CHOICES, default='CPF')
+    cpf_cnpj = models.CharField(max_length=18, unique=True, verbose_name="CPF/CNPJ")
+    endereco = models.CharField(max_length=255, verbose_name="Endereço")
+    dados_bancarios = models.TextField(blank=True, null=True, verbose_name="Dados Bancários")
+    data_cadastro = models.DateTimeField(auto_now_add=True, verbose_name="Data de Cadastro")
+
+    class Meta:
+        verbose_name = "Intermediário"
+        verbose_name_plural = "Intermediários"
+
+    def __str__(self):
+        return self.nome

@@ -3,6 +3,8 @@ from .models import (
     Imovel,
     Locador,
     Locatario,
+    Fiador,
+    Intermediario,
     Contrato,
     Pagamento,
     Manutencao,
@@ -158,4 +160,30 @@ class DocumentoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Documento
+        fields = '__all__'
+
+
+# -----------------------------------------------------------------------------
+# 8. SERIALIZER PARA FIADOR
+# -----------------------------------------------------------------------------
+# Converte o modelo Fiador para JSON.
+# -----------------------------------------------------------------------------
+class FiadorSerializer(serializers.ModelSerializer):
+    """
+    Serializador para o modelo Manutencao.
+    """
+
+    class Meta:
+        model = Fiador
+        fields = '__all__'
+
+
+# -----------------------------------------------------------------------------
+# 9. SERIALIZER PARA INTERMEDIARIOS
+# -----------------------------------------------------------------------------
+# Converte o modelo Locatario para JSON.
+# -----------------------------------------------------------------------------
+class IntermediarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Intermediario
         fields = '__all__'
